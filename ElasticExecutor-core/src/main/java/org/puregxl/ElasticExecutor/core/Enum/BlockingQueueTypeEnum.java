@@ -90,7 +90,7 @@ public enum BlockingQueueTypeEnum {
         }
     }
 
-    public BlockingQueue<Runnable> createBlockQueue(String name, Integer capacity) {
+    public static BlockingQueue<Runnable> createBlockQueue(String name, Integer capacity) {
         int actualCapacity = capacity == null || capacity < 0 ? DEFAULT_CAPACITY : capacity;
         BlockingQueueTypeEnum blockingQueueTypeEnum = BLOCKING_QUEUE_TYPE_ENUM_MAP.get(name);
         //如果为空返回默认数据

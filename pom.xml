@@ -12,6 +12,7 @@
         <module>ElasticExecutor-core</module>
         <module>ElasticExecutor-com</module>
         <module>starter</module>
+        <module>example</module>
     </modules>
 
     <properties>
