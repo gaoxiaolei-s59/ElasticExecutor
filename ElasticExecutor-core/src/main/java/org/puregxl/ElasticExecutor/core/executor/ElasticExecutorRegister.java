@@ -7,13 +7,14 @@ public class ElasticExecutorRegister {
     /**
      * 并发安全的哈希map
      */
-    private static final ConcurrentHashMap<String, ElasticExecutor> T_MAP = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<String, ElasticExecutorHolder> T_MAP = new ConcurrentHashMap<>();
 
     /**
      * 注册到我们的核心线程池参数
      */
-    public static void put(String threadPoolId, ElasticExecutor dyThreadPoolHolder){
-        T_MAP.put(threadPoolId, dyThreadPoolHolder);
+    public static void put(String threadPoolId, ElasticExecutor executor, ElasticExecutorProperties properties){
+        ElasticExecutorHolder holder = new ElasticExecutorHolder(threadPoolId, executor, properties);
+        T_MAP.put(threadPoolId, holder);
     }
 
     /**
@@ -32,7 +33,7 @@ public class ElasticExecutorRegister {
      * @param threadPoolId 线程池唯一标识
      * @return
      */
-    public static ElasticExecutor get(String threadPoolId){
+    public static ElasticExecutorHolder get(String threadPoolId){
         if (!T_MAP.containsKey(threadPoolId)) {
             throw new RuntimeException("没有该实例");
         }
@@ -43,7 +44,7 @@ public class ElasticExecutorRegister {
      * 返回所有实例
      * @return
      */
-    public Collection<ElasticExecutor> getAll(){
+    public Collection<ElasticExecutorHolder> getAll(){
         return T_MAP.values();
     }
 

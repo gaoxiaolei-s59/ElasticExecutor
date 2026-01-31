@@ -1,12 +1,48 @@
 package org.puregxl.ElasticExecutor.core.config;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+import org.puregxl.ElasticExecutor.core.Enum.ConfigFileTypeEnum;
 import org.puregxl.ElasticExecutor.core.executor.ElasticExecutorProperties;
-
 import java.util.List;
 
+
+/**
+ * elastic-executor:
+ *   # 1. 对应 private Boolean enable = Boolean.TRUE;
+ *   enable: true
+ *
+ *   # 2. 对应 private NacosConfig nacos;
+ *   nacos:
+ *     data-id: my-dynamic-thread-pool-config.yaml
+ *     group: DEFAULT_GROUP
+ *
+ *   # 3. 对应 private MonitorConfig monitor = new MonitorConfig();
+ *   monitor:
+ *     enable: true
+ *     # 对应 collectType
+ *     collect-type: micrometer
+ *     # 对应 collectInterval (注意 Java 是 Long 类型)
+ *     collect-interval: 10
+ *
+ *   # 4. 对应 private List<ElasticExecutorProperties> executors;
+ *   # 这是一个 List，在 YAML 中使用 "-" (破折号) 表示数组元素
+ *   executors:
+ *     - thread-pool-id: order-service-executor  # 假设 ElasticExecutorProperties 里有这个字段
+ *       core-pool-size: 10
+ *       maximum-pool-size: 20
+ *       keep-alive-time: 60
+ *       # 下面这些字段取决于 ElasticExecutorProperties 的具体定义
+ *       queue-capacity: 1024
+ *       blocking-queue: LinkedBlockingQueue
+ *       rejected-handler: AbortPolicy
+ *
+ *     - thread-pool-id: log-service-executor
+ *       core-pool-size: 5
+ *       maximum-pool-size: 10
+ *       keep-alive-time: 30
+ *       queue-capacity: 500
+ */
+@Data
 public class BootstrapConfigProperties {
     public static final String PRE = "ElasticExecutor";
 
@@ -19,15 +55,6 @@ public class BootstrapConfigProperties {
     private NacosConfig nacos;
 
 
-    /**
-     * Nacos 远程配置文件格式类型
-     */
-    private ConfigFileTypeEnum configFileType;
-
-    /**
-     * 通知配置
-     */
-    private NotifyPlatformsConfig notifyPlatforms;
 
     /**
      * 监控配置
@@ -39,19 +66,7 @@ public class BootstrapConfigProperties {
      */
     private List<ElasticExecutorProperties> executors;
 
-    @Data
-    public static class NotifyPlatformsConfig {
 
-        /**
-         * 通知类型，比如：DING
-         */
-        private String platform;
-
-        /**
-         * 完整 WebHook 地址
-         */
-        private String url;
-    }
 
     @Data
     public static class MonitorConfig {
@@ -100,22 +115,8 @@ public class BootstrapConfigProperties {
          */
         private Long keepAliveTime;
 
-        /**
-         * 通知配置
-         */
-        private NotifyConfig notify;
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class NotifyConfig {
-
-        /**
-         * 接收人集合
-         */
-        private String receives;
-    }
 
     private static BootstrapConfigProperties INSTANCE = new BootstrapConfigProperties();
 

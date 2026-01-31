@@ -1,5 +1,6 @@
 package org.puregxl.ElasticExecutor.core.executor;
 
+import lombok.Data;
 import lombok.Getter;
 
 import java.util.concurrent.*;
@@ -8,6 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * 继承了ThreadPoolExecutor 实现动态线程池
  */
+
 public class ElasticExecutor extends ThreadPoolExecutor {
     /**
      * 线程池唯一标识
