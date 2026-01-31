@@ -92,10 +92,14 @@ public enum BlockingQueueTypeEnum {
 
     public static BlockingQueue<Runnable> createBlockQueue(String name, Integer capacity) {
         int actualCapacity = capacity == null || capacity < 0 ? DEFAULT_CAPACITY : capacity;
+        // 增加判空逻辑
+        if (name == null) {
+             return LINKED_BLOCKING_QUEUE.create(actualCapacity);
+        }
         BlockingQueueTypeEnum blockingQueueTypeEnum = BLOCKING_QUEUE_TYPE_ENUM_MAP.get(name);
         //如果为空返回默认数据
         if (blockingQueueTypeEnum == null) {
-            return ARRAY_BLOCKING_QUEUE.create(actualCapacity);
+            return LINKED_BLOCKING_QUEUE.create(actualCapacity);
         }
         //返回
         return blockingQueueTypeEnum.create(actualCapacity);

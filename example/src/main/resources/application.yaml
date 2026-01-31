@@ -1,0 +1,22 @@
+server:
+  port: 8088
+
+spring:
+  application:
+    name: elastic-executor-example
+
+elastic-executor:
+  enable: true
+  nacos:
+    data-id: example-thread-pool.yaml
+    group: DEFAULT_GROUP
+  executors:
+    - thread-pool-id: test-executor
+      core-pool-size: 5
+      maximum-pool-size: 20
+      keep-alive-time: 60
+      queue-capacity: 200
+      work-queue: ArrayBlockingQueue
+      rejected-handler: AbortPolicy
+      allow-core-thread-time-out: true
+

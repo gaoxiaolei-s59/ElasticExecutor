@@ -44,7 +44,8 @@ import java.util.List;
  */
 @Data
 public class BootstrapConfigProperties {
-    public static final String PRE = "ElasticExecutor";
+
+    public static final String PRE = "elastic-executor";
 
 
     private Boolean enable = Boolean.TRUE;
@@ -53,7 +54,6 @@ public class BootstrapConfigProperties {
      * Nacos 配置文件
      */
     private NacosConfig nacos;
-
 
 
     /**
