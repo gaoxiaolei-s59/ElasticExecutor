@@ -11,6 +11,7 @@
     <modules>
         <module>ElasticExecutor-core</module>
         <module>ElasticExecutor-com</module>
+        <module>starter</module>
     </modules>
 
     <properties>
