@@ -93,7 +93,7 @@ public class NacosRefresherHandler implements ApplicationRunner {
      * @param info
      */
     private void refreshThreadPool(String info) {
-        //利用Spring自带的工具 把info转换为
+        //利用Spring自带的工具 把info转换
         BootstrapConfigProperties refreshConfigProperties = bindProperties(info);
         //比对逻辑
         List<ElasticExecutorProperties> executors = refreshConfigProperties.getExecutors();
@@ -112,6 +112,9 @@ public class NacosRefresherHandler implements ApplicationRunner {
             }
             //变更属性
             updateThreadPool(executorProperties);
+            //直接变更配置类
+            executorHolder.setExecutorProperties(executorProperties);
+
         }
     }
 
@@ -169,6 +172,7 @@ public class NacosRefresherHandler implements ApplicationRunner {
         if (remoteProperties.getAllowCoreThreadTimeOut() != null &&
                 !Objects.equals(remoteProperties.getAllowCoreThreadTimeOut(), executor.allowsCoreThreadTimeOut())) {
             executor.allowCoreThreadTimeOut(remoteProperties.getAllowCoreThreadTimeOut());
+
             log.info("[{}] AllowCoreThreadTimeOut 变更: {}", threadPoolId, remoteProperties.getAllowCoreThreadTimeOut());
         }
 
@@ -179,6 +183,7 @@ public class NacosRefresherHandler implements ApplicationRunner {
             // 假设你有 RejectedPolicyTypeEnum.createPolicy 工厂方法
             RejectedExecutionHandler handler = RejectedPolicyTypeEnum.createPolicy(remoteProperties.getRejectedHandler());
             if (handler != null) {
+
                 executor.setRejectedExecutionHandler(handler);
                 log.info("[{}] RejectedHandler 变更: {}", threadPoolId, remoteProperties.getRejectedHandler());
             }
@@ -189,8 +194,16 @@ public class NacosRefresherHandler implements ApplicationRunner {
         if (remoteProperties.getKeepAliveTime() != null &&
                 !Objects.equals(remoteProperties.getKeepAliveTime(), executor.getKeepAliveTime(TimeUnit.SECONDS))) {
             executor.setKeepAliveTime(remoteProperties.getKeepAliveTime(), TimeUnit.SECONDS);
+
             log.info("[{}] KeepAliveTime 变更: {}s", threadPoolId, remoteProperties.getKeepAliveTime());
         }
+
+
+//        if (remoteProperties.getWorkQueue() != null &&
+//                !Objects.equals(remoteProperties.getWorkQueue(), currentProperties.getWorkQueue())) {
+//            executor.setKeepAliveTime(remoteProperties.getKeepAliveTime(), TimeUnit.SECONDS);
+//            log.info("[{}] KeepAliveTime 变更: {}s", threadPoolId, remoteProperties.getKeepAliveTime());
+//        }
 
 
 //        // 5. 队列容量 (需确保队列支持动态调整)
