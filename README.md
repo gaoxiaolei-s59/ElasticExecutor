@@ -45,3 +45,92 @@
     <artifactId>elastic-executor-spring-boot-starter</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 </dependency>
+2. 项目配置
+在 application.yml 中配置 Nacos 地址及动态线程池规则。
+
+注意：Spring Boot 3.x 需使用 config.import 语法。
+
+YAML
+
+spring:
+  application:
+    name: elastic-demo
+  cloud:
+    nacos:
+      config:
+        server-addr: 127.0.0.1:8848
+        file-extension: yaml
+  config:
+    import:
+      - optional:nacos:example-thread-pool.yaml  # 导入动态配置 data-id
+
+# 本地默认配置（可选）
+elastic-executor:
+  enable: true
+  monitor:
+    enable: true
+    collect-interval: 10
+3. Nacos 动态配置
+在 Nacos 控制台新建配置 example-thread-pool.yaml：
+
+YAML
+
+elastic-executor:
+  executors:
+    - thread-pool-id: order-service-executor  # 线程池唯一标识
+      core-pool-size: 10
+      maximum-pool-size: 20
+      queue-capacity: 1024
+      keep-alive-time: 60
+      blocking-queue: LinkedBlockingQueue
+      rejected-handler: AbortPolicy
+4. 获取与使用
+框架会自动根据配置创建或更新线程池。
+
+Java
+
+@Resource
+private ThreadPoolExecutor orderServiceExecutor; // Bean 名称需与 thread-pool-id 一致
+📝 变更日志示例
+当你在 Nacos 修改参数并发布后，控制台将输出清晰的对比日志：
+
+Plaintext
+
+----------------------------------------------------------------------
+🔄 [ElasticExecutor] Thread Pool Configuration Changed
+----------------------------------------------------------------------
+ Pool Name                : order-service-executor
+ Core Pool Size           : 10 ➜ 20
+ Maximum Pool Size        : 20 ➜ 40
+ Queue Capacity           : 1024 ➜ 2048
+ Keep Alive Time          : 60 ➜ 60
+ Rejected Handle          : AbortPolicy ➜ CallerRunsPolicy
+ Allow Core Thread Timeout: false ➜ false
+----------------------------------------------------------------------
+📂 项目结构
+Plaintext
+
+elastic-executor
+├── elastic-executor-core       # 核心模块：配置定义、Binder解析、变更监听
+├── elastic-executor-starter    # Starter模块：自动配置、Bean注入
+├── elastic-executor-example    # 示例模块：演示 Demo
+└── pom.xml
+🗓️ 开发计划 (Roadmap)
+[x] 完成核心配置类与 Nacos 监听对接
+
+[x] 解决 Spring Boot 3 Binder 解析 YAML 嵌套 Map 的问题
+
+[x] 实现 JDK 线程池参数动态热更新
+
+[ ] 支持更多类型的阻塞队列动态调整 (ResizableLinkedBlockingQueue)
+
+[ ] 集成 Prometheus 监控指标导出
+
+[ ] 提供 Web 控制台页面 (Admin Console)
+
+🤝 贡献与交流
+欢迎提交 Issue 或 Pull Request。
+
+Author: Gao Xiaolei
+
+School: North University of China (中北大学)
