@@ -2,7 +2,7 @@
 
 # ElasticExecutor - 动态线程池治理框架
 
-**中文** | [English](https://www.google.com/search?q=./README.md)
+**中文** | [English](./README_EN.md)
 
 **ElasticExecutor** 是一个轻量级、高扩展性的 Java 动态线程池治理框架。它允许开发者在不重启应用的情况下，通过 Nacos 配置中心动态调整线程池的核心参数（核心线程数、最大线程数、队列容量等），并提供实时的变更日志监控。
 
