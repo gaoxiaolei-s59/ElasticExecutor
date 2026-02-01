@@ -44,7 +44,7 @@ public class ElasticExecutorRegister {
      * 返回所有实例
      * @return
      */
-    public Collection<ElasticExecutorHolder> getAll(){
+    public static Collection<ElasticExecutorHolder> getAll(){
         return T_MAP.values();
     }
 

@@ -18,6 +18,11 @@ public enum BlockingQueueTypeEnum {
         public BlockingQueue<Runnable> create(Integer capacity) {
             return new ArrayBlockingQueue<>(capacity);
         }
+
+        @Override
+        public BlockingQueue<Runnable> create() {
+            return new LinkedBlockingQueue<>(DEFAULT_CAPACITY);
+        }
     },
     /**
      * LinkedBlockingQueue: 基于链表的阻塞队列，容量可选 (不填则为 Integer.MAX_VALUE)
@@ -25,6 +30,11 @@ public enum BlockingQueueTypeEnum {
     LINKED_BLOCKING_QUEUE("LinkedBlockingQueue") {
         public LinkedBlockingQueue<Runnable> create(Integer capacity) {
             return new LinkedBlockingQueue<>(capacity);
+        }
+
+        @Override
+        public BlockingQueue<Runnable> create() {
+            return new LinkedBlockingQueue<>(DEFAULT_CAPACITY);
         }
     },
 
@@ -37,6 +47,11 @@ public enum BlockingQueueTypeEnum {
         public BlockingQueue<Runnable> create(Integer capacity) {
             return new SynchronousQueue<>();
         }
+
+        @Override
+        public BlockingQueue<Runnable> create() {
+            return new SynchronousQueue<>();
+        }
     },
     /**
      * LinkedTransferQueue: 无界阻塞队列
@@ -45,6 +60,11 @@ public enum BlockingQueueTypeEnum {
         @Override
         public BlockingQueue<Runnable> create(Integer capacity) {
             return new LinkedTransferQueue<>();
+        }
+
+        @Override
+        public BlockingQueue<Runnable> create() {
+            return new LinkedBlockingDeque<>(DEFAULT_CAPACITY);
         }
     },
 
@@ -56,6 +76,11 @@ public enum BlockingQueueTypeEnum {
         public BlockingQueue<Runnable> create(Integer capacity) {
             return new PriorityBlockingQueue<>(capacity);
         }
+
+        @Override
+        public BlockingQueue<Runnable> create() {
+            return new LinkedBlockingDeque<>(DEFAULT_CAPACITY);
+        }
     },
 
     /**
@@ -65,6 +90,11 @@ public enum BlockingQueueTypeEnum {
         @Override
         public BlockingQueue<Runnable> create(Integer capacity) {
             return new LinkedBlockingDeque<>(capacity);
+        }
+
+        @Override
+        public BlockingQueue<Runnable> create() {
+            return new LinkedBlockingDeque<>(DEFAULT_CAPACITY);
         }
     };
 
@@ -79,6 +109,8 @@ public enum BlockingQueueTypeEnum {
     private static final int DEFAULT_CAPACITY = 1024;
 
     public abstract BlockingQueue<Runnable> create(Integer capacity);
+
+    public abstract BlockingQueue<Runnable> create();
 
     // ================== 静态缓存与工厂方法 ==================
 

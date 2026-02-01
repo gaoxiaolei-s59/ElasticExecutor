@@ -1,26 +1,14 @@
-
-
 package org.puregxl.ElasticExecutor.core.Enum;
 
-import lombok.Getter;
 
 
-@Getter
 public enum ConfigFileTypeEnum {
 
-    /**
-     * PROPERTIES
-     */
+
     PROPERTIES("properties"),
 
-    /**
-     * YML
-     */
     YML("yml"),
 
-    /**
-     * YAML
-     */
     YAML("yaml");
 
     private final String value;
@@ -29,10 +17,10 @@ public enum ConfigFileTypeEnum {
         this.value = value;
     }
 
-    public static ConfigFileTypeEnum of(String value) {
-        for (ConfigFileTypeEnum configFileTypeEnum : ConfigFileTypeEnum.values()) {
-            if (configFileTypeEnum.value.equals(value)) {
-                return configFileTypeEnum;
+    public static ConfigFileTypeEnum get(String value) {
+        for (ConfigFileTypeEnum typeEnum : ConfigFileTypeEnum.values()) {
+            if (typeEnum.value.equals(value)) {
+                return typeEnum;
             }
         }
         return PROPERTIES;
