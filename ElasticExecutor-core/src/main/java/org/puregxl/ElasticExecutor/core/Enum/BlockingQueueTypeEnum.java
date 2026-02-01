@@ -21,7 +21,7 @@ public enum BlockingQueueTypeEnum {
 
         @Override
         public BlockingQueue<Runnable> create() {
-            return new LinkedBlockingQueue<>(DEFAULT_CAPACITY);
+            return new ArrayBlockingQueue<>(DEFAULT_CAPACITY);
         }
     },
     /**
@@ -64,7 +64,7 @@ public enum BlockingQueueTypeEnum {
 
         @Override
         public BlockingQueue<Runnable> create() {
-            return new LinkedBlockingDeque<>(DEFAULT_CAPACITY);
+            return new LinkedTransferQueue<>();
         }
     },
 
@@ -79,7 +79,7 @@ public enum BlockingQueueTypeEnum {
 
         @Override
         public BlockingQueue<Runnable> create() {
-            return new LinkedBlockingDeque<>(DEFAULT_CAPACITY);
+            return new PriorityBlockingQueue<>(DEFAULT_CAPACITY);
         }
     },
 
