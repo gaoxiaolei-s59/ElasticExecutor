@@ -27,6 +27,9 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static org.puregxl.ElasticExecutor.core.message.MessageFormat.CHANGE_DELIMITER;
+import static org.puregxl.ElasticExecutor.core.message.MessageFormat.CHANGE_THREAD_POOL_TEXT;
+
 
 @Slf4j
 public class NacosRefresherHandler implements ApplicationRunner {
@@ -143,7 +146,7 @@ public class NacosRefresherHandler implements ApplicationRunner {
 
         // 校验配置合法性
         if (newCore > newMax) {
-            log.error("[{}] 修改失败: CorePoolSize ({}) 不能大于 MaximumPoolSize ({})", threadPoolId, newCore, newMax);
+
             return; // 或者抛出异常
         }
 
@@ -158,12 +161,12 @@ public class NacosRefresherHandler implements ApplicationRunner {
                 // 扩容顺序
                 executor.setMaximumPoolSize(newMax);
                 executor.setCorePoolSize(newCore);
-                log.info("[{}] 扩容成功: Max [{} -> {}], Core [{} -> {}]", threadPoolId, currentMax, newMax, currentCore, newCore);
+
             } else {
                 // 缩容顺序 (或 Max 不变)
                 executor.setCorePoolSize(newCore);
                 executor.setMaximumPoolSize(newMax);
-                log.info("[{}] 参数变更: Core [{} -> {}], Max [{} -> {}]", threadPoolId, currentCore, newCore, currentMax, newMax);
+
             }
         }
 
@@ -173,7 +176,6 @@ public class NacosRefresherHandler implements ApplicationRunner {
                 !Objects.equals(remoteProperties.getAllowCoreThreadTimeOut(), executor.allowsCoreThreadTimeOut())) {
             executor.allowCoreThreadTimeOut(remoteProperties.getAllowCoreThreadTimeOut());
 
-            log.info("[{}] AllowCoreThreadTimeOut 变更: {}", threadPoolId, remoteProperties.getAllowCoreThreadTimeOut());
         }
 
 
@@ -183,9 +185,7 @@ public class NacosRefresherHandler implements ApplicationRunner {
             // 假设你有 RejectedPolicyTypeEnum.createPolicy 工厂方法
             RejectedExecutionHandler handler = RejectedPolicyTypeEnum.createPolicy(remoteProperties.getRejectedHandler());
             if (handler != null) {
-
                 executor.setRejectedExecutionHandler(handler);
-                log.info("[{}] RejectedHandler 变更: {}", threadPoolId, remoteProperties.getRejectedHandler());
             }
         }
 
@@ -195,8 +195,20 @@ public class NacosRefresherHandler implements ApplicationRunner {
                 !Objects.equals(remoteProperties.getKeepAliveTime(), executor.getKeepAliveTime(TimeUnit.SECONDS))) {
             executor.setKeepAliveTime(remoteProperties.getKeepAliveTime(), TimeUnit.SECONDS);
 
-            log.info("[{}] KeepAliveTime 变更: {}s", threadPoolId, remoteProperties.getKeepAliveTime());
+
         }
+
+        //打印变更日志
+        log.info(CHANGE_THREAD_POOL_TEXT,
+                threadPoolId,
+                // 2. 下面这些是参数，日志框架会自动把它们填入 {} 中
+                String.format(CHANGE_DELIMITER, originalProperties.getCorePoolSize(), remoteProperties.getCorePoolSize()),
+                String.format(CHANGE_DELIMITER, originalProperties.getMaximumPoolSize(), remoteProperties.getMaximumPoolSize()),
+                String.format(CHANGE_DELIMITER, originalProperties.getQueueCapacity(), remoteProperties.getQueueCapacity()),
+                String.format(CHANGE_DELIMITER, originalProperties.getKeepAliveTime(), remoteProperties.getKeepAliveTime()),
+                String.format(CHANGE_DELIMITER, originalProperties.getRejectedHandler(), remoteProperties.getRejectedHandler()),
+                String.format(CHANGE_DELIMITER, originalProperties.getAllowCoreThreadTimeOut(), remoteProperties.getAllowCoreThreadTimeOut())
+        );
 
 
 //        if (remoteProperties.getWorkQueue() != null &&
