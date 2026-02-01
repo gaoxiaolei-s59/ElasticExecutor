@@ -12,15 +12,18 @@ import org.puregxl.ElasticExecutor.core.config.BootstrapConfigProperties;
 import org.puregxl.ElasticExecutor.core.executor.ElasticExecutorHolder;
 import org.puregxl.ElasticExecutor.core.executor.ElasticExecutorProperties;
 import org.puregxl.ElasticExecutor.core.executor.ElasticExecutorRegister;
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.context.properties.bind.Bindable;
 import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.boot.context.properties.source.ConfigurationPropertySource;
 import org.springframework.boot.context.properties.source.MapConfigurationPropertySource;
+import org.springframework.core.io.ByteArrayResource;
 import org.yaml.snakeyaml.Yaml;
 
 import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -285,35 +288,42 @@ public class NacosRefresherHandler implements ApplicationRunner {
         }
 
         try {
-            Map<String, Object> configMap = null;
+            // 1. 获取配置类型
+            ConfigFileTypeEnum type = this.properties.getConfigFileType();
 
-            // 获取当前配置的文件类型（YAML 或 Properties）
-            ConfigFileTypeEnum type = properties.getConfigFileType();
-            // 如果 properties 里没配，也可以根据 dataId 的后缀判断
+            // 定义一个局部变量来存放解析后的扁平配置
+            Properties flatProperties = new Properties();
 
-            // A. 解析 YAML
+            // 2. 解析配置内容为扁平的 Properties
+            // 无论 YAML 还是 Properties，统一转为扁平的 Key-Value (如 a.b.c=value)
             if (ConfigFileTypeEnum.YAML.equals(type) || ConfigFileTypeEnum.YML.equals(type)) {
-                Yaml yaml = new Yaml();
-                configMap = yaml.load(configContent);
-            }
-            // B. 解析 Properties
-            else if (ConfigFileTypeEnum.PROPERTIES.equals(type)) {
-                Properties props = new Properties();
-                props.load(new StringReader(configContent));
-                configMap = (Map) props;
+                YamlPropertiesFactoryBean factory = new YamlPropertiesFactoryBean();
+                factory.setResources(new ByteArrayResource(configContent.getBytes(StandardCharsets.UTF_8)));
+                // getObject() 会自动把 YAML 拍平成 properties 格式
+                flatProperties = factory.getObject();
+            } else {
+                flatProperties.load(new StringReader(configContent));
             }
 
-            if (configMap == null) {
+            if (flatProperties == null || flatProperties.isEmpty()) {
                 return null;
             }
 
-            // C. 使用 Spring Binder 进行强类型绑定
-            // 这步非常关键：它能处理 "thread.executors[0].core-pool-size" 这种复杂映射
-            ConfigurationPropertySource sources = new MapConfigurationPropertySource(configMap);
-            Binder binder = new Binder(sources);
+            // 3. 判断前缀策略
+            // 检查属性中是否包含以 "elastic-executor." 开头的 Key
+            boolean hasPrefix = flatProperties.keySet().stream()
+                    .map(Object::toString)
+                    .anyMatch(k -> k.startsWith(BootstrapConfigProperties.PRE + "."));
 
-            // bind 方法参数 1：你的前缀 "thread"，参数 2：目标类
-            return binder.bind(BootstrapConfigProperties.PRE, Bindable.of(BootstrapConfigProperties.class))
+            // 如果配置里写了 "elastic-executor.enable=true"，则绑定前缀为 "elastic-executor"
+            // 如果配置里直接写 "enable=true"，则绑定前缀为 "" (空)
+            String bindPrefix = hasPrefix ? BootstrapConfigProperties.PRE : "";
+
+            // 4. 执行绑定
+            ConfigurationPropertySource source = new MapConfigurationPropertySource(flatProperties);
+            Binder binder = new Binder(source);
+
+            return binder.bind(bindPrefix, Bindable.of(BootstrapConfigProperties.class))
                     .orElse(null);
 
         } catch (Exception e) {

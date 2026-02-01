@@ -4,8 +4,23 @@ server:
 spring:
   application:
     name: elastic-executor-example
+  cloud:
+    nacos:
+      config:
+        username: nacos
+        password: nacos
+        file-extension: yaml
+        extension-configs:
+          - data-id: example-thread-pool.yaml
+            group: DEFAULT_GROUP
+            refresh: true
+      server-addr: 192.168.159.135:8848
+  config:
+    import:
+      - optional:nacos:${spring.application.name}.yaml # 关键配置：导入 Nacos 配置
 
 elastic-executor:
+  config-file-type: yaml
   enable: true
   nacos:
     data-id: example-thread-pool.yaml
