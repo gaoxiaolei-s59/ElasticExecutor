@@ -130,7 +130,7 @@ public class NacosRefresherHandler implements ApplicationRunner {
             log.error("未找到线程池 [{}]，无法更新", threadPoolId);
             return;
         }
-        synchronized(threadPoolId.intern()) {
+        synchronized (threadPoolId.intern()) {
             ThreadPoolExecutor executor = holder.getExecutor();
             ElasticExecutorProperties originalProperties = holder.getExecutorProperties();
 
@@ -209,7 +209,28 @@ public class NacosRefresherHandler implements ApplicationRunner {
                 }
             }
 
-            //打印变更日志
+            //6 活跃线程阈值
+            if (remoteProperties.getAlarm().getActiveThreshold() != null &&
+                    !Objects.equals(remoteProperties.getAlarm().getActiveThreshold(), originalProperties.getAlarm().getActiveThreshold())) {
+                originalProperties.getAlarm().setActiveThreshold(remoteProperties.getAlarm().getActiveThreshold());
+                log.info("[{}] 活跃度报警阈值变更: {}% ➜ {}%",
+                        holder.getThreadPoolId(),
+                        originalProperties.getAlarm().getActiveThreshold(),
+                        remoteProperties.getAlarm().getActiveThreshold());
+            }
+
+
+            //7.队列容量阈值
+            if (remoteProperties.getAlarm().getQueueThreshold() != null &&
+                    !Objects.equals(remoteProperties.getAlarm().getQueueThreshold(), originalProperties.getAlarm().getQueueThreshold())) {
+                originalProperties.getAlarm().setQueueThreshold(remoteProperties.getAlarm().getQueueThreshold());
+                log.info("[{}] 队列报警阈值变更: {}% ➜ {}%",
+                        holder.getThreadPoolId(),
+                        originalProperties.getAlarm().getQueueThreshold(),
+                        remoteProperties.getAlarm().getQueueThreshold());;
+            }
+
+            //打印核心变更日志
             log.info(CHANGE_THREAD_POOL_TEXT,
                     threadPoolId,
                     // 2. 下面这些是参数，日志框架会自动把它们填入 {} 中
