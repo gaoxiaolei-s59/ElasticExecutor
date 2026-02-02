@@ -103,12 +103,12 @@ public enum BlockingQueueTypeEnum {
     RESIZABLE_CAPACITY_LINKED_BLOCKING_QUEUE("ResizableCapacityLinkedBlockingQueue"){
         @Override
         public BlockingQueue<Runnable> create(Integer capacity) {
-            return new LinkedBlockingDeque<>(capacity);
+            return new ResizableCapacityLinkedBlockingQueue<>(capacity);
         }
 
         @Override
         public BlockingQueue<Runnable> create() {
-            return new LinkedBlockingDeque<>(DEFAULT_CAPACITY);
+            return new ResizableCapacityLinkedBlockingQueue<>(DEFAULT_CAPACITY);
         }
     };
 

@@ -2,6 +2,7 @@ package org.puregxl.ElasticExecutor.example.config;
 
 import org.puregxl.ElasticExecutor.com.ElasticExecutorPool;
 import org.puregxl.ElasticExecutor.core.executor.ElasticExecutor;
+import org.puregxl.ElasticExecutor.core.extend.ResizableCapacityLinkedBlockingQueue;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -27,6 +28,22 @@ public class ThreadPoolConfiguration {
                 "test-executor"
         );
     }
+
+    @Bean
+    @ElasticExecutorPool
+    public ElasticExecutor testExecutor1() {
+        return new ElasticExecutor(
+                2,
+                4,
+                30,
+                TimeUnit.SECONDS,
+                new ResizableCapacityLinkedBlockingQueue<>(100),
+                Executors.defaultThreadFactory(),
+                new ThreadPoolExecutor.AbortPolicy(),
+                "test-executor1"
+        );
+    }
+
 
 
 }

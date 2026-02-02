@@ -12,6 +12,7 @@ import org.puregxl.ElasticExecutor.core.config.BootstrapConfigProperties;
 import org.puregxl.ElasticExecutor.core.executor.ElasticExecutorHolder;
 import org.puregxl.ElasticExecutor.core.executor.ElasticExecutorProperties;
 import org.puregxl.ElasticExecutor.core.executor.ElasticExecutorRegister;
+import org.puregxl.ElasticExecutor.core.extend.ResizableCapacityLinkedBlockingQueue;
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -115,8 +116,7 @@ public class NacosRefresherHandler implements ApplicationRunner {
             }
             //变更属性
             updateThreadPool(executorProperties);
-            //直接变更配置类
-            executorHolder.setExecutorProperties(executorProperties);
+
 
         }
     }
@@ -194,8 +194,19 @@ public class NacosRefresherHandler implements ApplicationRunner {
             if (remoteProperties.getKeepAliveTime() != null &&
                     !Objects.equals(remoteProperties.getKeepAliveTime(), executor.getKeepAliveTime(TimeUnit.SECONDS))) {
                 executor.setKeepAliveTime(remoteProperties.getKeepAliveTime(), TimeUnit.SECONDS);
+            }
 
-
+            // 5. 队列容量 (需确保队列支持动态调整)
+            if (remoteProperties.getQueueCapacity() != null &&
+                    !Objects.equals(remoteProperties.getQueueCapacity(), originalProperties.getQueueCapacity())) {
+                BlockingQueue<Runnable> queue = executor.getQueue();
+                // 这里的 ResizableCapacityLinkedBlockingQueue 是自定义的类
+                if (queue instanceof ResizableCapacityLinkedBlockingQueue) {
+                    ((ResizableCapacityLinkedBlockingQueue<?>) queue).setCapacity(remoteProperties.getQueueCapacity());
+                } else {
+                    log.warn("[{}] 当前队列类型 {} 不支持动态修改容量", threadPoolId, queue.getClass().getSimpleName());
+                    remoteProperties.setQueueCapacity(originalProperties.getQueueCapacity());
+                }
             }
 
             //打印变更日志
@@ -218,19 +229,6 @@ public class NacosRefresherHandler implements ApplicationRunner {
 //        }
 
 
-//        // 5. 队列容量 (需确保队列支持动态调整)
-//        if (remoteProperties.getQueueCapacity() != null &&
-//                !Objects.equals(remoteProperties.getQueueCapacity(), originalProperties.getQueueCapacity())) {
-//            BlockingQueue<Runnable> queue = executor.getQueue();
-//            // 这里的 ResizableCapacityLinkedBlockingQueue 需要是你自定义的类
-//            if (queue instanceof ResizableCapacityLinkedBlockingQueue) {
-//                ((ResizableCapacityLinkedBlockingQueue<?>) queue).setCapacity(remoteProperties.getQueueCapacity());
-//                log.info("[{}] QueueCapacity 变更: {} -> {}", threadPoolId, originalProperties.getQueueCapacity(), remoteProperties.getQueueCapacity());
-//            } else {
-//                log.warn("[{}] 当前队列类型 {} 不支持动态修改容量", threadPoolId, queue.getClass().getSimpleName());
-//            }
-//        }
-
         // 6. 关键步骤：更新 Holder 中的本地配置缓存
         holder.setExecutorProperties(remoteProperties);
     }
@@ -247,11 +245,12 @@ public class NacosRefresherHandler implements ApplicationRunner {
 
         ThreadPoolExecutor executor = holder.getExecutor();
         boolean isChanged = false;
-
+        if (isDiff(remoteProperties.getWorkQueue(), currentProperties.getWorkQueue())) {
+            throw new RuntimeException("禁止修改阻塞队列, 会导致任务丢失");
+        }
         // --- 1. CorePoolSize (核心线程数) ---
         // 对比目标：Remote配置 vs 运行时 Executor 真实值
         if (isDiff(remoteProperties.getCorePoolSize(), executor.getCorePoolSize())) {
-
             isChanged = true;
         }
 

@@ -34,4 +34,13 @@ elastic-executor:
       work-queue: ArrayBlockingQueue
       rejected-handler: AbortPolicy
       allow-core-thread-time-out: true
+    - thread-pool-id: test-executor1
+      core-pool-size: 5
+      maximum-pool-size: 20
+      keep-alive-time: 60
+      queue-capacity: 200
+      work-queue: ResizableCapacityLinkedBlockingQueue
+      rejected-handler: AbortPolicy
+      allow-core-thread-time-out: true
+
 
