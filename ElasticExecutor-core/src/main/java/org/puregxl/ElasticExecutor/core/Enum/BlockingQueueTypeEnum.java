@@ -2,6 +2,7 @@ package org.puregxl.ElasticExecutor.core.Enum;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import org.puregxl.ElasticExecutor.core.extend.ResizableCapacityLinkedBlockingQueue;
 
 import java.util.Map;
 import java.util.concurrent.*;
@@ -87,6 +88,19 @@ public enum BlockingQueueTypeEnum {
      * LinkedBlockingDeque: 双端阻塞队列
      */
     LINKED_BLOCKING_DEQUE("LinkedBlockingDeque") {
+        @Override
+        public BlockingQueue<Runnable> create(Integer capacity) {
+            return new LinkedBlockingDeque<>(capacity);
+        }
+
+        @Override
+        public BlockingQueue<Runnable> create() {
+            return new LinkedBlockingDeque<>(DEFAULT_CAPACITY);
+        }
+    },
+
+
+    RESIZABLE_CAPACITY_LINKED_BLOCKING_QUEUE("ResizableCapacityLinkedBlockingQueue"){
         @Override
         public BlockingQueue<Runnable> create(Integer capacity) {
             return new LinkedBlockingDeque<>(capacity);

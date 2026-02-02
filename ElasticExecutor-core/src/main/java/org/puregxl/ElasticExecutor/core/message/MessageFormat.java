@@ -1,7 +1,7 @@
 package org.puregxl.ElasticExecutor.core.message;
 
 /**
- * 文本变更模板 美化类
+ * 文本变更模板
  */
 public class MessageFormat {
     /**
