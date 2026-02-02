@@ -22,7 +22,7 @@ public class ThreadPoolConfiguration {
                 4,
                 30,
                 TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(100),
+                new LinkedBlockingQueue<>(50),
                 Executors.defaultThreadFactory(),
                 new ThreadPoolExecutor.AbortPolicy(),
                 "test-executor"
@@ -37,7 +37,7 @@ public class ThreadPoolConfiguration {
                 4,
                 30,
                 TimeUnit.SECONDS,
-                new ResizableCapacityLinkedBlockingQueue<>(100),
+                new ResizableCapacityLinkedBlockingQueue<>(50),
                 Executors.defaultThreadFactory(),
                 new ThreadPoolExecutor.AbortPolicy(),
                 "test-executor1"

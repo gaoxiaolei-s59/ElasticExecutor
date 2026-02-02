@@ -55,4 +55,26 @@ public class ElasticExecutorProperties {
     private Boolean allowCoreThreadTimeOut;
 
 
+    /**
+     * 报警阈值
+     */
+    private AlarmConfig alarmConfig = new AlarmConfig();
+
+
+    @Data
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class AlarmConfig{
+        /**
+         * 阈值为百分之90
+         */
+        private Integer QueueThreshold = 90;
+
+        /**
+         * 活跃线程阈值
+         */
+        private Integer activeThreshold = 80;
+    }
+
+
 }

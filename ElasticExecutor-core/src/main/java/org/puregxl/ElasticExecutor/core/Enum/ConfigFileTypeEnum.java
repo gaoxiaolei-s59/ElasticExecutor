@@ -1,7 +1,5 @@
 package org.puregxl.ElasticExecutor.core.Enum;
 
-
-
 public enum ConfigFileTypeEnum {
 
 

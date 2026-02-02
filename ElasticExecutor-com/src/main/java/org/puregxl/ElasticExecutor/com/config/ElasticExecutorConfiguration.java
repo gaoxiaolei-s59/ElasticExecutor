@@ -1,5 +1,6 @@
 package org.puregxl.ElasticExecutor.com.config;
 
+import org.puregxl.ElasticExecutor.com.alarm.ElasticPoolAlarmChecker;
 import org.puregxl.ElasticExecutor.com.processor.ApplicationContextHolder;
 import org.puregxl.ElasticExecutor.com.processor.ElasticBeanPostProcessor;
 import org.puregxl.ElasticExecutor.core.config.BootstrapConfigProperties;
@@ -20,5 +21,12 @@ public class ElasticExecutorConfiguration {
     public ElasticBeanPostProcessor elasticBeanPostProcessor(BootstrapConfigProperties bootstrapConfigProperties){
         return new ElasticBeanPostProcessor(bootstrapConfigProperties);
     }
+
+
+    @Bean( destroyMethod = "stop")
+    public ElasticPoolAlarmChecker elasticPoolAlarmChecker(){
+        return new ElasticPoolAlarmChecker();
+    }
+
 
 }

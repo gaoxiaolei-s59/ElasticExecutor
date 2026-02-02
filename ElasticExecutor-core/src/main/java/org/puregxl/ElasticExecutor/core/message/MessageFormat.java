@@ -28,4 +28,22 @@ public class MessageFormat {
      * 变更分隔符
      */
     public static final String CHANGE_DELIMITER = "%s ➜ %s";
+
+
+    public static final String ALARM_LOG_TEXT = """
+       \s
+        ----------------------------------------------------------------------
+        🚨 [ElasticExecutor] Thread Pool Alarm Triggered
+        ----------------------------------------------------------------------
+         Pool Name            : %s
+         Alarm Type           : %s
+         Current Usage        : %s%%
+         Alarm Threshold      : %s%%
+        ----------------------------------------------------------------------
+         Core Pool Size       : %d
+         Maximum Pool Size    : %d
+         Active Threads       : %d
+         Queue Size           : %d / %d
+        ----------------------------------------------------------------------
+        """;
 }
