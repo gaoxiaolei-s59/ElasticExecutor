@@ -39,18 +39,13 @@ public class ThreadFactoryBuilder {
 
         return runnable -> {
             Thread thread = factory.newThread(runnable);
-
-
             if (this.pre != null) {
                 thread.setName(this.pre + "-" + num.getAndIncrement());
             }
 
-
             if (this.domain != null) {
                 thread.setDaemon(this.domain);
             }
-
-
             return thread;
         };
     }

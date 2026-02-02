@@ -130,86 +130,86 @@ public class NacosRefresherHandler implements ApplicationRunner {
             log.error("未找到线程池 [{}]，无法更新", threadPoolId);
             return;
         }
+        synchronized(threadPoolId.intern()) {
+            ThreadPoolExecutor executor = holder.getExecutor();
+            ElasticExecutorProperties originalProperties = holder.getExecutorProperties();
 
-        ThreadPoolExecutor executor = holder.getExecutor();
-        ElasticExecutorProperties originalProperties = holder.getExecutorProperties();
+            // ==========================================================================
+            // 1. 核心参数修改 (Core & Max)
+            // ==========================================================================
+            int currentCore = executor.getCorePoolSize();
+            int currentMax = executor.getMaximumPoolSize();
 
-        // ==========================================================================
-        // 1. 核心参数修改 (Core & Max)
-        // ==========================================================================
-        int currentCore = executor.getCorePoolSize();
-        int currentMax = executor.getMaximumPoolSize();
+            // 确定新值：如果 Nacos 没传 (null)，就沿用当前运行时的值，简化后续逻辑
+            Integer newCore = remoteProperties.getCorePoolSize() != null ? remoteProperties.getCorePoolSize() : currentCore;
+            Integer newMax = remoteProperties.getMaximumPoolSize() != null ? remoteProperties.getMaximumPoolSize() : currentMax;
 
-        // 确定新值：如果 Nacos 没传 (null)，就沿用当前运行时的值，简化后续逻辑
-        Integer newCore = remoteProperties.getCorePoolSize() != null ? remoteProperties.getCorePoolSize() : currentCore;
-        Integer newMax = remoteProperties.getMaximumPoolSize() != null ? remoteProperties.getMaximumPoolSize() : currentMax;
+            // 校验配置合法性
+            if (newCore > newMax) {
 
-        // 校验配置合法性
-        if (newCore > newMax) {
+                return; // 或者抛出异常
+            }
 
-            return; // 或者抛出异常
-        }
+            // 只有当数值真的变了才执行修改逻辑
+            if (!Objects.equals(newCore, currentCore) || !Objects.equals(newMax, currentMax)) {
+                // 修改原则：
+                // 1. 如果是扩容 (targetMax > currentMax)，必须先设置 Max，再设置 Core
+                // 2. 如果是缩容 (targetMax < currentMax)，必须先设置 Core，再设置 Max
+                // 3. Max 不变的情况，顺序无所谓，走 else 逻辑即可
 
-        // 只有当数值真的变了才执行修改逻辑
-        if (!Objects.equals(newCore, currentCore) || !Objects.equals(newMax, currentMax)) {
-            // 修改原则：
-            // 1. 如果是扩容 (targetMax > currentMax)，必须先设置 Max，再设置 Core
-            // 2. 如果是缩容 (targetMax < currentMax)，必须先设置 Core，再设置 Max
-            // 3. Max 不变的情况，顺序无所谓，走 else 逻辑即可
+                if (newMax > currentMax) {
+                    // 扩容顺序
+                    executor.setMaximumPoolSize(newMax);
+                    executor.setCorePoolSize(newCore);
 
-            if (newMax > currentMax) {
-                // 扩容顺序
-                executor.setMaximumPoolSize(newMax);
-                executor.setCorePoolSize(newCore);
+                } else {
+                    // 缩容顺序 (或 Max 不变)
+                    executor.setCorePoolSize(newCore);
+                    executor.setMaximumPoolSize(newMax);
 
-            } else {
-                // 缩容顺序 (或 Max 不变)
-                executor.setCorePoolSize(newCore);
-                executor.setMaximumPoolSize(newMax);
+                }
+            }
+
+
+            // 2. 允许核心线程超时
+            if (remoteProperties.getAllowCoreThreadTimeOut() != null &&
+                    !Objects.equals(remoteProperties.getAllowCoreThreadTimeOut(), executor.allowsCoreThreadTimeOut())) {
+                executor.allowCoreThreadTimeOut(remoteProperties.getAllowCoreThreadTimeOut());
 
             }
-        }
 
 
-        // 2. 允许核心线程超时
-        if (remoteProperties.getAllowCoreThreadTimeOut() != null &&
-                !Objects.equals(remoteProperties.getAllowCoreThreadTimeOut(), executor.allowsCoreThreadTimeOut())) {
-            executor.allowCoreThreadTimeOut(remoteProperties.getAllowCoreThreadTimeOut());
-
-        }
-
-
-        // 3. 拒绝策略
-        if (remoteProperties.getRejectedHandler() != null &&
-                !Objects.equals(remoteProperties.getRejectedHandler(), originalProperties.getRejectedHandler())) {
-            // 假设你有 RejectedPolicyTypeEnum.createPolicy 工厂方法
-            RejectedExecutionHandler handler = RejectedPolicyTypeEnum.createPolicy(remoteProperties.getRejectedHandler());
-            if (handler != null) {
-                executor.setRejectedExecutionHandler(handler);
+            // 3. 拒绝策略
+            if (remoteProperties.getRejectedHandler() != null &&
+                    !Objects.equals(remoteProperties.getRejectedHandler(), originalProperties.getRejectedHandler())) {
+                // 假设你有 RejectedPolicyTypeEnum.createPolicy 工厂方法
+                RejectedExecutionHandler handler = RejectedPolicyTypeEnum.createPolicy(remoteProperties.getRejectedHandler());
+                if (handler != null) {
+                    executor.setRejectedExecutionHandler(handler);
+                }
             }
+
+
+            // 4. 空闲回收时间
+            if (remoteProperties.getKeepAliveTime() != null &&
+                    !Objects.equals(remoteProperties.getKeepAliveTime(), executor.getKeepAliveTime(TimeUnit.SECONDS))) {
+                executor.setKeepAliveTime(remoteProperties.getKeepAliveTime(), TimeUnit.SECONDS);
+
+
+            }
+
+            //打印变更日志
+            log.info(CHANGE_THREAD_POOL_TEXT,
+                    threadPoolId,
+                    // 2. 下面这些是参数，日志框架会自动把它们填入 {} 中
+                    String.format(CHANGE_DELIMITER, originalProperties.getCorePoolSize(), remoteProperties.getCorePoolSize()),
+                    String.format(CHANGE_DELIMITER, originalProperties.getMaximumPoolSize(), remoteProperties.getMaximumPoolSize()),
+                    String.format(CHANGE_DELIMITER, originalProperties.getQueueCapacity(), remoteProperties.getQueueCapacity()),
+                    String.format(CHANGE_DELIMITER, originalProperties.getKeepAliveTime(), remoteProperties.getKeepAliveTime()),
+                    String.format(CHANGE_DELIMITER, originalProperties.getRejectedHandler(), remoteProperties.getRejectedHandler()),
+                    String.format(CHANGE_DELIMITER, originalProperties.getAllowCoreThreadTimeOut(), remoteProperties.getAllowCoreThreadTimeOut())
+            );
         }
-
-
-        // 4. 空闲回收时间
-        if (remoteProperties.getKeepAliveTime() != null &&
-                !Objects.equals(remoteProperties.getKeepAliveTime(), executor.getKeepAliveTime(TimeUnit.SECONDS))) {
-            executor.setKeepAliveTime(remoteProperties.getKeepAliveTime(), TimeUnit.SECONDS);
-
-
-        }
-
-        //打印变更日志
-        log.info(CHANGE_THREAD_POOL_TEXT,
-                threadPoolId,
-                // 2. 下面这些是参数，日志框架会自动把它们填入 {} 中
-                String.format(CHANGE_DELIMITER, originalProperties.getCorePoolSize(), remoteProperties.getCorePoolSize()),
-                String.format(CHANGE_DELIMITER, originalProperties.getMaximumPoolSize(), remoteProperties.getMaximumPoolSize()),
-                String.format(CHANGE_DELIMITER, originalProperties.getQueueCapacity(), remoteProperties.getQueueCapacity()),
-                String.format(CHANGE_DELIMITER, originalProperties.getKeepAliveTime(), remoteProperties.getKeepAliveTime()),
-                String.format(CHANGE_DELIMITER, originalProperties.getRejectedHandler(), remoteProperties.getRejectedHandler()),
-                String.format(CHANGE_DELIMITER, originalProperties.getAllowCoreThreadTimeOut(), remoteProperties.getAllowCoreThreadTimeOut())
-        );
-
 
 //        if (remoteProperties.getWorkQueue() != null &&
 //                !Objects.equals(remoteProperties.getWorkQueue(), currentProperties.getWorkQueue())) {
@@ -230,7 +230,6 @@ public class NacosRefresherHandler implements ApplicationRunner {
 //                log.warn("[{}] 当前队列类型 {} 不支持动态修改容量", threadPoolId, queue.getClass().getSimpleName());
 //            }
 //        }
-
 
         // 6. 关键步骤：更新 Holder 中的本地配置缓存
         holder.setExecutorProperties(remoteProperties);
