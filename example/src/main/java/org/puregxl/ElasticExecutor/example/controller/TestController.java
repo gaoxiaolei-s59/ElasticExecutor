@@ -3,6 +3,8 @@ package org.puregxl.ElasticExecutor.example.controller;
 import jakarta.annotation.Resource;
 import lombok.RequiredArgsConstructor;
 import org.puregxl.ElasticExecutor.core.executor.ElasticExecutor;
+import org.puregxl.ElasticExecutor.core.executor.ElasticExecutorProperties;
+import org.puregxl.ElasticExecutor.core.executor.ElasticExecutorRegister;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,14 +44,29 @@ public class TestController {
                 // 忽略拒绝策略异常。
                 // 我们的目的是填满队列，填满后抛出异常说明已经达到最大负载，目的已达到。
             }
+
+            try {
+                testExecutor1.execute(() -> {
+                    try {
+
+                        // 这样才能让队列保持 "堆积状态"，等待报警检测定时任务轮询到。
+                        Thread.sleep(10000);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                });
+            } catch (RejectedExecutionException e) {
+                // 忽略拒绝策略异常。
+                // 我们的目的是填满队列，填满后抛出异常说明已经达到最大负载，目的已达到。
+            }
         }
 
         // --- 2. 收集当前状态（用于验证） ---
         Map<String, Object> results = new HashMap<>();
 
-        // 封装展示逻辑，避免重复代码
-        results.put(testExecutor.getThreadPoolId(), getPoolStatus(testExecutor));
-        results.put(testExecutor1.getThreadPoolId(), getPoolStatus(testExecutor1));
+
+        results.put(testExecutor.getThreadPoolId(), getPoolStatus(testExecutor, ElasticExecutorRegister.get(testExecutor.getThreadPoolId()).getExecutorProperties()));
+        results.put(testExecutor1.getThreadPoolId(), getPoolStatus(testExecutor1, ElasticExecutorRegister.get(testExecutor1.getThreadPoolId()).getExecutorProperties()));
 
         return results;
     }
@@ -57,7 +74,7 @@ public class TestController {
     /**
      * 提取通用的状态获取逻辑
      */
-    private Map<String, Object> getPoolStatus(ElasticExecutor executor) {
+    private Map<String, Object> getPoolStatus(ElasticExecutor executor, ElasticExecutorProperties executorProperties) {
         Map<String, Object> status = new HashMap<>();
 
         // 基础信息
@@ -80,7 +97,8 @@ public class TestController {
         status.put("keepAliveTime", executor.getKeepAliveTime(TimeUnit.SECONDS));
         status.put("allowCoreThreadTimeOut", executor.allowsCoreThreadTimeOut());
         status.put("workQueue", executor.getQueue().getClass().getSimpleName());
-
+        status.put("queue-threshold",  executorProperties.getAlarm().getQueueThreshold());
+        status.put("active-threshold",  executorProperties.getAlarm().getActiveThreshold());
         return status;
     }
 }

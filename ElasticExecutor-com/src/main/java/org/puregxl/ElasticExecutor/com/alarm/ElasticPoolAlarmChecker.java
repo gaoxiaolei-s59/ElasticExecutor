@@ -74,7 +74,7 @@ public class ElasticPoolAlarmChecker implements ApplicationRunner {
 
 
         int usage = (int) Math.round((size * 100.0) / capacity);
-        int threshold = properties.getAlarmConfig().getQueueThreshold();
+        int threshold = properties.getAlarm().getQueueThreshold();
 
         if (usage > threshold) {
             // 修正点：将计算好的 usage 和 threshold 传进去
@@ -95,7 +95,7 @@ public class ElasticPoolAlarmChecker implements ApplicationRunner {
         if (maximumPoolSize == 0) return;
 
         int usage = (int) Math.round((activeCount * 100.0) / maximumPoolSize);
-        int threshold = properties.getAlarmConfig().getActiveThreshold();
+        int threshold = properties.getAlarm().getActiveThreshold();
 
         if (usage > threshold) {
             sendAlarm(holder, "ACTIVE_THREADS", usage, threshold);

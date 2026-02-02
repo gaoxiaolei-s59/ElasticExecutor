@@ -58,7 +58,7 @@ public class ElasticExecutorProperties {
     /**
      * 报警阈值
      */
-    private AlarmConfig alarmConfig = new AlarmConfig();
+    private AlarmConfig alarm = new AlarmConfig();
 
 
     @Data
