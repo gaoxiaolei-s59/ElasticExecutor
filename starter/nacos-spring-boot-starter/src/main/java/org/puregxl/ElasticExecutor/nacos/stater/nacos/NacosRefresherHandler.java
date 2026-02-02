@@ -212,22 +212,23 @@ public class NacosRefresherHandler implements ApplicationRunner {
             //6 活跃线程阈值
             if (remoteProperties.getAlarm().getActiveThreshold() != null &&
                     !Objects.equals(remoteProperties.getAlarm().getActiveThreshold(), originalProperties.getAlarm().getActiveThreshold())) {
-                originalProperties.getAlarm().setActiveThreshold(remoteProperties.getAlarm().getActiveThreshold());
+
                 log.info("[{}] 活跃度报警阈值变更: {}% ➜ {}%",
                         holder.getThreadPoolId(),
                         originalProperties.getAlarm().getActiveThreshold(),
                         remoteProperties.getAlarm().getActiveThreshold());
+                originalProperties.getAlarm().setActiveThreshold(remoteProperties.getAlarm().getActiveThreshold());
             }
 
 
             //7.队列容量阈值
             if (remoteProperties.getAlarm().getQueueThreshold() != null &&
                     !Objects.equals(remoteProperties.getAlarm().getQueueThreshold(), originalProperties.getAlarm().getQueueThreshold())) {
-                originalProperties.getAlarm().setQueueThreshold(remoteProperties.getAlarm().getQueueThreshold());
                 log.info("[{}] 队列报警阈值变更: {}% ➜ {}%",
                         holder.getThreadPoolId(),
                         originalProperties.getAlarm().getQueueThreshold(),
                         remoteProperties.getAlarm().getQueueThreshold());;
+                originalProperties.getAlarm().setQueueThreshold(remoteProperties.getAlarm().getQueueThreshold());
             }
 
             //打印核心变更日志
@@ -305,6 +306,14 @@ public class NacosRefresherHandler implements ApplicationRunner {
         // 这里通常需要自定义 ResizableLinkedBlockingQueue。
         // 这里先对比配置值。
         if (isDiff(remoteProperties.getQueueCapacity(), currentProperties.getQueueCapacity())) {
+            isChanged = true;
+        }
+
+        if (isDiff(remoteProperties.getAlarm().getActiveThreshold(), currentProperties.getAlarm().getActiveThreshold())) {
+            isChanged = true;
+        }
+
+        if (isDiff(remoteProperties.getAlarm().getQueueThreshold(), currentProperties.getAlarm().getQueueThreshold())) {
             isChanged = true;
         }
 
