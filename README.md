@@ -164,6 +164,6 @@ elastic-executor
 -   [x] 完成核心配置类与 Nacos 监听对接
 -   [x] 解决 Spring Boot 3 Binder 解析 YAML 嵌套 Map 的问题
 -   [x] 实现 JDK 线程池参数动态热更新
--   [ ] 支持更多类型的阻塞队列动态调整 (ResizableLinkedBlockingQueue)
--   [ ] 集成 Prometheus 监控指标导出
+-   [x] 支持更多类型的阻塞队列动态调整 (ResizableLinkedBlockingQueue)
+-   [x] 集成 Prometheus 监控指标导出
 -   [ ] 提供 Web 控制台页面 (Admin Console)
